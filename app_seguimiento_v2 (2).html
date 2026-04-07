@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seguimiento de Tareas</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fff;--bg2:#f5f5f3;--bg3:#eeede9;--bg-info:#E6F1FB;
+  --tx:#1a1a1a;--tx2:#6b6b6b;--tx3:#a0a0a0;--tx-info:#185FA5;
+  --bd:rgba(0,0,0,0.1);--bd2:rgba(0,0,0,0.2);--bd3:rgba(0,0,0,0.35);
+  --r:8px;--rl:12px;--font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#1e1e1e;--bg2:#2a2a2a;--bg3:#242424;--bg-info:#0c2d4a;
+  --tx:#f0f0f0;--tx2:#a0a0a0;--tx3:#666;--tx-info:#85B7EB;
+  --bd:rgba(255,255,255,0.1);--bd2:rgba(255,255,255,0.2);--bd3:rgba(255,255,255,0.35);
+}}
+body{font-family:var(--font);font-size:14px;color:var(--tx);background:var(--bg3);min-height:100vh;padding:0}
+.app{max-width:540px;margin:0 auto;background:var(--bg);min-height:100vh}
+@media(min-width:600px){.app{margin:1.5rem auto;border-radius:var(--rl);border:0.5px solid var(--bd);min-height:auto}}
+.app-title{padding:1rem 1.25rem 0.75rem;font-size:15px;font-weight:500;border-bottom:0.5px solid var(--bd)}
+.nav{display:flex;border-bottom:0.5px solid var(--bd);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.nav::-webkit-scrollbar{display:none}
+.nav-btn{flex-shrink:0;padding:10px 10px;font-size:11.5px;font-weight:500;background:transparent;border:none;color:var(--tx2);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;font-family:var(--font)}
+.nav-btn.active{color:var(--tx);border-bottom-color:var(--tx)}
+.body{padding:1rem 1.25rem 2rem}
+.screen{display:none}.screen.active{display:block}
+.lbl{font-size:11px;font-weight:500;color:var(--tx2);margin-bottom:5px;display:block}
+.field{margin-bottom:14px}
+select,input,textarea{width:100%;font-family:var(--font);font-size:13px;background:var(--bg);color:var(--tx);border:0.5px solid var(--bd2);border-radius:var(--r);padding:8px 10px;outline:none;-webkit-appearance:none;appearance:none}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+select:focus,input:focus,textarea:focus{border-color:var(--bd3)}
+textarea{resize:vertical;min-height:72px;line-height:1.5}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn-p{width:100%;padding:11px;font-size:13px;font-weight:500;background:var(--tx);color:var(--bg);border:none;border-radius:var(--r);cursor:pointer;font-family:var(--font);margin-top:4px}
+.btn-p:active{opacity:0.8}
+.btn-s{font-size:12px;padding:7px 12px;border-radius:var(--r);border:0.5px solid var(--bd2);background:transparent;color:var(--tx);cursor:pointer;font-family:var(--font);white-space:nowrap}
+.btn-s:active{background:var(--bg2)}
+.card{background:var(--bg);border:0.5px solid var(--bd);border-radius:var(--rl);padding:1rem 1.25rem;margin-bottom:10px}
+.badge{display:inline-flex;align-items:center;font-size:11px;font-weight:500;padding:2px 8px;border-radius:var(--r)}
+.bg{background:#EAF3DE;color:#3B6D11}
+.ba{background:#FAEEDA;color:#854F0B}
+.br{background:#FCEBEB;color:#A32D2D}
+.t-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.t-ttl{font-size:13px;font-weight:500;color:var(--tx)}
+.t-met{font-size:12px;color:var(--tx2);margin-top:2px}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.dg{background:#1D9E75}.da{background:#EF9F27}.dr{background:#E24B4A}
+.ev-box{background:var(--bg2);border-radius:var(--r);padding:7px 10px;margin-top:6px;font-size:12px;color:var(--tx2)}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:1.25rem}
+.stat{background:var(--bg2);border-radius:var(--r);padding:.75rem;text-align:center}
+.stat-n{font-size:22px;font-weight:500}
+.stat-l{font-size:11px;color:var(--tx2);margin-top:2px}
+.sep{border:none;border-top:0.5px solid var(--bd);margin:12px 0}
+.fil-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.fil-btn{font-size:11px;padding:4px 10px;border-radius:var(--r);border:0.5px solid var(--bd2);background:transparent;color:var(--tx2);cursor:pointer;font-family:var(--font)}
+.fil-btn.on{background:var(--bg2);color:var(--tx);border-color:var(--bd3)}
+.msg{background:var(--bg2);border-radius:0 var(--r) var(--r) 0;padding:10px 12px;font-size:12px;line-height:1.75;color:var(--tx);margin-top:8px;white-space:pre-wrap;border-left:3px solid #1D9E75}
+.cp-btn{font-size:12px;padding:6px 12px;border-radius:var(--r);border:0.5px solid var(--bd2);background:transparent;color:var(--tx2);cursor:pointer;margin-top:6px;width:100%;font-family:var(--font)}
+.cp-btn:active{background:var(--bg2)}
+.toast{display:none;background:#EAF3DE;color:#3B6D11;font-size:12px;padding:6px 12px;border-radius:var(--r);margin-top:6px;text-align:center}
+.emp-tag{font-size:10px;padding:2px 7px;border-radius:var(--r);background:var(--bg-info);color:var(--tx-info);font-weight:500;margin-right:5px}
+.cfg-emp{background:var(--bg2);border-radius:var(--rl);padding:12px 14px;margin-bottom:10px}
+.cfg-hdr{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
+.cfg-name{font-size:13px;font-weight:500}
+.cfg-meta{font-size:11px;color:var(--tx2);margin-top:1px}
+.cfg-body{display:none;margin-top:10px}
+.cfg-body.open{display:block}
+.resp-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:0.5px solid var(--bd);font-size:13px}
+.resp-row:last-of-type{border-bottom:none}
+.resp-sec{font-size:11px;color:var(--tx2)}
+.x-btn{background:none;border:none;color:var(--tx3);cursor:pointer;font-size:18px;padding:0 4px;line-height:1;font-family:var(--font)}
+.x-btn:hover{color:#E24B4A}
+.add-row{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.add-row input{min-width:0}
+.chev{font-size:11px;color:var(--tx3);transition:transform 0.2s;display:inline-block}
+.chev.open{transform:rotate(180deg)}
+.empty{font-size:12px;color:var(--tx3);padding:6px 0;text-align:center}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:999;align-items:center;justify-content:center}
+.modal-bg.show{display:flex}
+.modal{background:var(--bg);border-radius:var(--rl);padding:1.25rem;max-width:300px;width:90%;border:0.5px solid var(--bd2)}
+.modal-title{font-size:14px;font-weight:500;margin-bottom:8px}
+.modal-msg{font-size:13px;color:var(--tx2);margin-bottom:1.25rem;line-height:1.5}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end}
+.modal-cancel{font-size:13px;padding:7px 14px;border-radius:var(--r);border:0.5px solid var(--bd2);background:transparent;color:var(--tx);cursor:pointer;font-family:var(--font)}
+.modal-confirm{font-size:13px;padding:7px 14px;border-radius:var(--r);border:none;background:#E24B4A;color:#fff;cursor:pointer;font-family:var(--font);font-weight:500}
+</style>
+<!-- Modal de confirmación -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">¿Eliminar?</div>
+    <div class="modal-msg" id="modal-msg"></div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="modal-confirm" onclick="confirmModal()">Eliminar</button>
+    </div>
+  </div>
+</div>
+</head>
+<body>
+<div class="app">
+  <div class="app-title">Seguimiento de tareas</div>
+  <nav class="nav">
+    <button class="nav-btn active" onclick="goTab('nueva',this)">+ Nueva tarea</button>
+    <button class="nav-btn" onclick="goTab('evidencia',this)">Evidencia</button>
+    <button class="nav-btn" onclick="goTab('panel',this)">Panel</button>
+    <button class="nav-btn" onclick="goTab('plantillas',this)">Plantillas</button>
+    <button class="nav-btn" onclick="goTab('config',this)">Configuración</button>
+  </nav>
+  <div class="body">
+
+    <!-- NUEVA TAREA -->
+    <div id="t-nueva" class="screen active">
+      <div class="field"><label class="lbl">Empresa cliente</label>
+        <select id="nt-emp" onchange="updateResps()"><option value="">Selecciona empresa...</option></select>
+      </div>
+      <div class="field"><label class="lbl">Responsable</label>
+        <select id="nt-resp"><option value="">Primero selecciona empresa</option></select>
+      </div>
+      <div class="field"><label class="lbl">Descripción de la tarea</label>
+        <textarea id="nt-desc" placeholder="Describe qué hay que hacer..."></textarea>
+      </div>
+      <div class="row2">
+        <div class="field"><label class="lbl">Tipo</label>
+          <select id="nt-tipo">
+            <option value="Proceso">De proceso</option>
+            <option value="Hábito">De hábito</option>
+            <option value="Operativa">Operativa</option>
+          </select>
+        </div>
+        <div class="field"><label class="lbl">Fecha límite</label>
+          <input type="date" id="nt-fecha">
+        </div>
+      </div>
+      <div class="field"><label class="lbl">Evidencia requerida</label>
+        <select id="nt-ev">
+          <option>Foto antes y después</option>
+          <option>Foto del resultado</option>
+          <option>Documento / Excel</option>
+          <option>Confirmación escrita</option>
+          <option>Foto + documento</option>
+        </select>
+      </div>
+      <button class="btn-p" onclick="crearTarea()">Crear tarea y generar mensaje WhatsApp</button>
+      <div id="nt-out" style="display:none;margin-top:14px">
+        <div class="lbl" style="margin-bottom:6px">Mensaje listo para copiar al grupo</div>
+        <div class="msg" id="nt-msg"></div>
+        <button class="cp-btn" onclick="copiar('nt-msg','t-nueva-ok')">Copiar mensaje</button>
+        <div class="toast" id="t-nueva-ok">Copiado al portapapeles</div>
+      </div>
+    </div>
+
+    <!-- EVIDENCIA -->
+    <div id="t-evidencia" class="screen">
+      <div class="field"><label class="lbl">Empresa</label>
+        <select id="ev-emp" onchange="loadPendientes()"><option value="">Selecciona empresa...</option></select>
+      </div>
+      <div class="field"><label class="lbl">Tarea completada</label>
+        <select id="ev-tarea"><option>Primero selecciona empresa</option></select>
+      </div>
+      <div class="field"><label class="lbl">Tipo de evidencia recibida</label>
+        <select id="ev-tipo">
+          <option>Foto</option><option>Vídeo</option>
+          <option>Documento / Excel</option>
+          <option>Foto + documento</option>
+          <option>Confirmación escrita</option>
+        </select>
+      </div>
+      <div class="field"><label class="lbl">Notas (opcional)</label>
+        <textarea id="ev-notas" placeholder="Observaciones sobre la evidencia..."></textarea>
+      </div>
+      <button class="btn-p" onclick="registrar()">Registrar como completada</button>
+      <div class="toast" id="t-ev-ok" style="margin-top:10px"></div>
+    </div>
+
+    <!-- PANEL -->
+    <div id="t-panel" class="screen">
+      <div class="stats">
+        <div class="stat"><div class="stat-n" id="s-tot">0</div><div class="stat-l">Total</div></div>
+        <div class="stat"><div class="stat-n" id="s-comp" style="color:#1D9E75">0</div><div class="stat-l">Completadas</div></div>
+        <div class="stat"><div class="stat-n" id="s-venc" style="color:#E24B4A">0</div><div class="stat-l">Vencidas</div></div>
+      </div>
+      <div class="fil-row">
+        <button class="fil-btn on" onclick="filtrar('todas',this)">Todas</button>
+        <button class="fil-btn" onclick="filtrar('Pendiente',this)">Pendientes</button>
+        <button class="fil-btn" onclick="filtrar('Completada',this)">Completadas</button>
+        <button class="fil-btn" onclick="filtrar('Vencida',this)">Vencidas</button>
+      </div>
+      <div id="lista"></div>
+      <div id="lista-empty" style="text-align:center;color:var(--tx3);font-size:13px;padding:2rem 0">Aún no hay tareas. Crea la primera desde + Nueva tarea.</div>
+    </div>
+
+    <!-- PLANTILLAS -->
+    <div id="t-plantillas" class="screen">
+      <div class="field"><label class="lbl">Empresa</label>
+        <select id="pl-emp"></select>
+      </div>
+      <hr class="sep">
+      <div class="lbl">Resumen semanal de estado</div>
+      <button class="cp-btn" style="margin-top:4px" onclick="genResumen()">Generar resumen</button>
+      <div class="msg" id="pl-res" style="display:none"></div>
+      <button class="cp-btn" id="pl-res-cp" style="display:none" onclick="copiar('pl-res','t-pl1')">Copiar</button>
+      <div class="toast" id="t-pl1">Copiado</div>
+      <hr class="sep" style="margin-top:14px">
+      <div class="lbl">Aviso de visita presencial</div>
+      <div class="field" style="margin-top:6px"><input type="date" id="pl-fecha"></div>
+      <button class="cp-btn" onclick="genVisita()">Generar aviso</button>
+      <div class="msg" id="pl-vis" style="display:none"></div>
+      <button class="cp-btn" id="pl-vis-cp" style="display:none" onclick="copiar('pl-vis','t-pl2')">Copiar</button>
+      <div class="toast" id="t-pl2">Copiado</div>
+    </div>
+
+    <!-- CONFIGURACIÓN -->
+    <div id="t-config" class="screen">
+      <div class="lbl">Empresas y responsables</div>
+      <div id="cfg-lista"></div>
+      <hr class="sep">
+      <div class="lbl">Añadir nueva empresa</div>
+      <div class="add-row">
+        <input type="text" id="cfg-new-emp" placeholder="Nombre de la empresa" style="flex:1;min-width:140px">
+        <button class="btn-s" onclick="addEmpresa()">Añadir empresa</button>
+      </div>
+      <div class="toast" id="t-cfg" style="margin-top:8px"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+var DB = {
+  empresas: [
+    {
+      nombre:'Distribuciones García', clave:'garcia',
+      responsables:[
+        {nombre:'Carlos Martínez',seccion:'Almacén'},
+        {nombre:'Ana Ruiz',seccion:'Tienda'},
+        {nombre:'Javier Peña',seccion:'Logística'},
+        {nombre:'Rosa Blanco',seccion:'Administración'}
+      ]
+    },
+    {
+      nombre:'Talleres Roca', clave:'roca',
+      responsables:[
+        {nombre:'Pedro Sanz',seccion:'Producción'},
+        {nombre:'Laura Gómez',seccion:'Calidad'},
+        {nombre:'Tomás Vera',seccion:'Mantenimiento'}
+      ]
+    },
+    {
+      nombre:'Congelados del Norte', clave:'norte',
+      responsables:[
+        {nombre:'María López',seccion:'Almacén'},
+        {nombre:'Sergio Fuentes',seccion:'Distribución'},
+        {nombre:'Elena Pardo',seccion:'Administración'}
+      ]
+    }
+  ],
+  tareas:[
+    {id:1,emp:'garcia',resp:'Carlos Martínez',sec:'Almacén',desc:'Reorganizar zona de picking por rotación ABC',tipo:'Proceso',fecha:'2025-07-12',ev:'Foto antes y después',estado:'Pendiente',evRec:''},
+    {id:2,emp:'garcia',resp:'Ana Ruiz',sec:'Tienda',desc:'Implantar checklist de apertura en tienda',tipo:'Hábito',fecha:'2025-07-08',ev:'Foto + documento',estado:'Completada',evRec:'Foto del checklist + Excel'},
+    {id:3,emp:'roca',resp:'Pedro Sanz',sec:'Producción',desc:'Formar a operarios en protocolo de residuos',tipo:'Hábito',fecha:'2025-07-02',ev:'Confirmación escrita',estado:'Vencida',evRec:''},
+    {id:4,emp:'norte',resp:'María López',sec:'Almacén',desc:'Etiquetar pasillos del almacén frigorífico',tipo:'Operativa',fecha:'2025-07-10',ev:'Foto del resultado',estado:'Pendiente',evRec:''}
+  ],
+  nid:5
+};
+
+function getEmp(clave){return DB.empresas.find(e=>e.clave===clave)}
+function getNombre(clave){var e=getEmp(clave);return e?e.nombre:clave}
+
+function poblarSelects(){
+  ['nt-emp','ev-emp'].forEach(id=>{
+    var s=document.getElementById(id),v=s.value;
+    s.innerHTML='<option value="">Selecciona empresa...</option>';
+    DB.empresas.forEach(e=>{var o=document.createElement('option');o.value=e.clave;o.textContent=e.nombre;s.appendChild(o)});
+    if(v)s.value=v;
+  });
+  var pl=document.getElementById('pl-emp'),pv=pl.value;
+  pl.innerHTML='';
+  DB.empresas.forEach(e=>{var o=document.createElement('option');o.value=e.clave;o.textContent=e.nombre;pl.appendChild(o)});
+  if(pv)pl.value=pv;
+}
+
+function updateResps(){
+  var clave=document.getElementById('nt-emp').value;
+  var s=document.getElementById('nt-resp');
+  s.innerHTML='';
+  var e=getEmp(clave);
+  if(!e||!e.responsables.length){s.innerHTML='<option>Sin responsables — añade en Configuración</option>';return}
+  e.responsables.forEach(r=>{var o=document.createElement('option');o.value=r.nombre+'||'+(r.seccion||'');o.textContent=r.nombre+(r.seccion?' ('+r.seccion+')':'');s.appendChild(o)});
+}
+
+function loadPendientes(){
+  var clave=document.getElementById('ev-emp').value;
+  var s=document.getElementById('ev-tarea');
+  s.innerHTML='';
+  if(!clave){s.innerHTML='<option>Primero selecciona empresa</option>';return}
+  var pend=DB.tareas.filter(t=>t.emp===clave&&getEstado(t)!=='Completada');
+  if(!pend.length){s.innerHTML='<option>Sin tareas pendientes</option>';return}
+  pend.forEach(t=>{var o=document.createElement('option');o.value=t.id;o.textContent=t.resp+' — '+t.desc.substring(0,40)+(t.desc.length>40?'...':'');s.appendChild(o)});
+}
+
+function fFecha(str){if(!str)return'—';var p=str.split('-');return p[2]+'/'+p[1]+'/'+p[0]}
+
+function crearTarea(){
+  var clave=document.getElementById('nt-emp').value;
+  var rv=document.getElementById('nt-resp').value;
+  var desc=document.getElementById('nt-desc').value.trim();
+  var tipo=document.getElementById('nt-tipo').value;
+  var fecha=document.getElementById('nt-fecha').value;
+  var ev=document.getElementById('nt-ev').value;
+  if(!clave||!rv||!desc||!fecha){alert('Rellena todos los campos');return}
+  var p=rv.split('||');var resp=p[0];var sec=p[1]||'';
+  DB.tareas.push({id:DB.nid++,emp:clave,resp:resp,sec:sec,desc:desc,tipo:tipo,fecha:fecha,ev:ev,estado:'Pendiente',evRec:''});
+  var msg='📋 TAREA ASIGNADA\n👤 Para: '+resp+(sec?' ('+sec+')':'')+'\n📌 '+desc+'\n🔖 Tipo: '+tipo+'\n📅 Fecha límite: '+fFecha(fecha)+'\n📎 Evidencia requerida: '+ev+'\n\nConfirma respondiendo: ✅ Recibido, '+resp.split(' ')[0];
+  document.getElementById('nt-msg').textContent=msg;
+  document.getElementById('nt-out').style.display='block';
+  document.getElementById('nt-desc').value='';
+}
+
+function registrar(){
+  var tid=parseInt(document.getElementById('ev-tarea').value);
+  var tipo=document.getElementById('ev-tipo').value;
+  var notas=document.getElementById('ev-notas').value.trim();
+  var t=DB.tareas.find(x=>x.id===tid);
+  if(!t){alert('Selecciona una tarea');return}
+  t.estado='Completada';t.evRec=tipo+(notas?' — '+notas:'');
+  var toast=document.getElementById('t-ev-ok');
+  toast.textContent='Tarea de '+t.resp+' marcada como completada';
+  toast.style.display='block';setTimeout(()=>toast.style.display='none',3000);
+  document.getElementById('ev-notas').value='';
+  loadPendientes();
+}
+
+function getEstado(t){
+  if(t.estado==='Completada')return'Completada';
+  var h=new Date();h.setHours(0,0,0,0);
+  return new Date(t.fecha)<h?'Vencida':'Pendiente';
+}
+
+function filtrar(f,btn){
+  document.querySelectorAll('.fil-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderPanel(f);
+}
+
+function renderPanel(f){
+  f=f||'todas';
+  var comp=DB.tareas.filter(t=>getEstado(t)==='Completada').length;
+  var venc=DB.tareas.filter(t=>getEstado(t)==='Vencida').length;
+  document.getElementById('s-tot').textContent=DB.tareas.length;
+  document.getElementById('s-comp').textContent=comp;
+  document.getElementById('s-venc').textContent=venc;
+  var lista=document.getElementById('lista');
+  var empty=document.getElementById('lista-empty');
+  var fil=f==='todas'?DB.tareas:DB.tareas.filter(t=>getEstado(t)===f);
+  if(!fil.length){lista.innerHTML='';empty.style.display='block';return}
+  empty.style.display='none';
+  lista.innerHTML=fil.map(t=>{
+    var est=getEstado(t);
+    var dc=est==='Completada'?'dg':est==='Vencida'?'dr':'da';
+    var badge=est==='Completada'?'<span class="badge bg">Completada</span>':est==='Vencida'?'<span class="badge br">Vencida</span>':'<span class="badge ba">Pendiente</span>';
+    var ev=t.evRec?'<div class="ev-box">'+t.evRec+'</div>':'';
+    return '<div class="card"><div class="t-row"><div style="display:flex;gap:8px;align-items:flex-start;flex:1"><div class="dot '+dc+'" style="margin-top:4px"></div><div style="flex:1"><span class="emp-tag">'+getNombre(t.emp)+'</span><div class="t-ttl">'+t.desc+'</div><div class="t-met">'+t.resp+(t.sec?' · '+t.sec:'')+'</div><div class="t-met">'+t.tipo+' · Vence: '+fFecha(t.fecha)+'</div>'+ev+'</div></div>'+badge+'</div></div>';
+  }).join('');
+}
+
+function genResumen(){
+  var clave=document.getElementById('pl-emp').value;
+  var et=DB.tareas.filter(t=>t.emp===clave);
+  var comp=et.filter(t=>getEstado(t)==='Completada');
+  var pend=et.filter(t=>getEstado(t)==='Pendiente');
+  var venc=et.filter(t=>getEstado(t)==='Vencida');
+  var h=new Date();
+  var msg='📊 ESTADO TAREAS — '+h.getDate()+'/'+(h.getMonth()+1)+'/'+h.getFullYear()+'\n✅ Cerradas: '+comp.length;
+  if(pend.length)msg+='\n⏳ Pendientes:\n'+pend.map(t=>'  · '+t.resp.split(' ')[0]+' — '+t.desc.substring(0,35)+'...').join('\n');
+  if(venc.length)msg+='\n🔴 Vencidas:\n'+venc.map(t=>'  · '+t.resp.split(' ')[0]+' — '+t.desc.substring(0,35)+'...').join('\n');
+  if(!pend.length&&!venc.length)msg+='\n\nTodo al día esta semana.';
+  document.getElementById('pl-res').textContent=msg;
+  document.getElementById('pl-res').style.display='block';
+  document.getElementById('pl-res-cp').style.display='block';
+}
+
+function genVisita(){
+  var clave=document.getElementById('pl-emp').value;
+  var fecha=document.getElementById('pl-fecha').value;
+  if(!fecha){alert('Selecciona la fecha de visita');return}
+  var et=DB.tareas.filter(t=>t.emp===clave);
+  var comp=et.filter(t=>getEstado(t)==='Completada');
+  var pend=et.filter(t=>getEstado(t)!=='Completada');
+  var msg='📅 VISITA PRESENCIAL — '+fFecha(fecha)+'\n\nRevisaremos juntos:\n'+(comp.length?comp.map(t=>'✅ '+t.desc.substring(0,42)).join('\n'):'(sin tareas cerradas aún)');
+  if(pend.length)msg+='\n\nPendiente antes de la visita:\n'+pend.map(t=>'⏳ '+t.resp.split(' ')[0]+' — '+t.desc.substring(0,35)+'...').join('\n');
+  msg+='\n\nCualquier duda, escribid aquí.';
+  document.getElementById('pl-vis').textContent=msg;
+  document.getElementById('pl-vis').style.display='block';
+  document.getElementById('pl-vis-cp').style.display='block';
+}
+
+function copiar(id,toastId){
+  var txt=document.getElementById(id).textContent;
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(txt).then(()=>showToast(toastId));
+  } else {
+    var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);showToast(toastId);
+  }
+}
+
+function showToast(id,msg){
+  var t=document.getElementById(id);
+  if(msg)t.textContent=msg;
+  t.style.display='block';setTimeout(()=>t.style.display='none',2500);
+}
+
+/* CONFIGURACIÓN */
+function renderConfig(){
+  var lista=document.getElementById('cfg-lista');
+  if(!DB.empresas.length){lista.innerHTML='<div class="empty">No hay empresas. Añade la primera abajo.</div>';return}
+  lista.innerHTML=DB.empresas.map((e,ei)=>`
+    <div class="cfg-emp">
+      <div class="cfg-hdr" onclick="toggleEmp(${ei})">
+        <div>
+          <div class="cfg-name">${e.nombre}</div>
+          <div class="cfg-meta">${e.responsables.length} responsable${e.responsables.length!==1?'s':''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="x-btn" onclick="event.stopPropagation();delEmpresa(${ei})">×</button>
+          <span class="chev" id="chev-${ei}">▾</span>
+        </div>
+      </div>
+      <div class="cfg-body" id="cb-${ei}">
+        ${e.responsables.length
+          ? e.responsables.map((r,ri)=>`
+            <div class="resp-row">
+              <div><div>${r.nombre}</div><div class="resp-sec">${r.seccion||'Sin sección'}</div></div>
+              <button class="x-btn" onclick="delResp(${ei},${ri})">×</button>
+            </div>`).join('')
+          : '<div class="empty">Sin responsables aún</div>'
+        }
+        <div class="add-row">
+          <input type="text" id="rn-${ei}" placeholder="Nombre" style="flex:1;min-width:100px">
+          <input type="text" id="rs-${ei}" placeholder="Sección" style="width:100px">
+          <button class="btn-s" onclick="addResp(${ei})">+</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleEmp(ei){
+  var b=document.getElementById('cb-'+ei);
+  var c=document.getElementById('chev-'+ei);
+  var open=b.classList.toggle('open');
+  c.classList.toggle('open',open);
+}
+
+function addEmpresa(){
+  var input=document.getElementById('cfg-new-emp');
+  var nombre=input.value.trim();
+  if(!nombre)return;
+  var clave='emp_'+Date.now();
+  if(DB.empresas.find(e=>e.nombre.toLowerCase()===nombre.toLowerCase())){showToast('t-cfg','Ya existe esa empresa');return}
+  DB.empresas.push({nombre:nombre,clave:clave,responsables:[]});
+  input.value='';
+  poblarSelects();renderConfig();
+  showToast('t-cfg','Empresa "'+nombre+'" añadida');
+}
+
+var _modalCb=null;
+function openModal(title,msg,cb){
+  document.getElementById('modal-title').textContent=title;
+  document.getElementById('modal-msg').textContent=msg;
+  document.getElementById('modal-bg').classList.add('show');
+  _modalCb=cb;
+}
+function closeModal(){document.getElementById('modal-bg').classList.remove('show');_modalCb=null}
+function confirmModal(){if(_modalCb)_modalCb();closeModal()}
+
+function delEmpresa(ei){
+  var e=DB.empresas[ei];
+  openModal('Eliminar empresa','¿Eliminar "'+e.nombre+'" y todos sus responsables? Esta acción no se puede deshacer.',function(){
+    DB.empresas.splice(ei,1);
+    poblarSelects();renderConfig();
+  });
+}
+
+function addResp(ei){
+  var nombre=document.getElementById('rn-'+ei).value.trim();
+  var sec=document.getElementById('rs-'+ei).value.trim();
+  if(!nombre)return;
+  DB.empresas[ei].responsables.push({nombre:nombre,seccion:sec});
+  poblarSelects();renderConfig();
+  setTimeout(()=>{toggleEmp(ei)},10);
+}
+
+function delResp(ei,ri){
+  DB.empresas[ei].responsables.splice(ri,1);
+  poblarSelects();renderConfig();
+  setTimeout(()=>{toggleEmp(ei)},10);
+}
+
+function goTab(name,btn){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('t-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name==='panel')renderPanel();
+  if(name==='config')renderConfig();
+}
+
+var h=new Date();
+var yy=h.getFullYear(),mm=String(h.getMonth()+1).padStart(2,'0'),dd=String(h.getDate()).padStart(2,'0');
+var hoy=yy+'-'+mm+'-'+dd;
+document.getElementById('nt-fecha').value=hoy;
+document.getElementById('pl-fecha').value=hoy;
+poblarSelects();
+renderPanel();
+</script>
+</body>
+</html>
